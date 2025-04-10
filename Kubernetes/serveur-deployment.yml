@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serveur-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: serveur
+  template:
+    metadata:
+      labels:
+        app: serveur
+    spec:
+      containers:
+        - name: serveur
+          image: hamzzza/node-redis:v4
+          ports:
+            - containerPort: 3001
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: serveur-service
+  annotations:
+    prometheus.io/scrape: "true"     # Active le scraping
+    prometheus.io/port: "3001"       # Port de votre serveur
+    prometheus.io/path: "/metrics"   # Endpoint des métriques
+spec:
+  selector:
+    app: serveur
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001
+  type: LoadBalancer
+

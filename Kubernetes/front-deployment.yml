@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: front
+  template:
+    metadata:
+      labels:
+        app: front
+    spec:
+      containers:
+        - name: front
+          image: hamzzza/react-frontend:v5
+          ports:
+            - containerPort: 3000
+          env:
+            - name: REACT_APP_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: frontend-config
+                  key: REACT_APP_API_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: front-service
+spec:
+  selector:
+    app: front
+  ports:
+    - protocol: TCP
+      port: 80            # Port externe sur lequel le service sera accessible
+      targetPort: 3000    # Port interne du conteneur
+  type: LoadBalancer     
+

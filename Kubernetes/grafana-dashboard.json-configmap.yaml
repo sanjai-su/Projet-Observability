@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard
+  labels:
+    grafana_dashboard: "1"
+data:
+  dashboard.json: |
+    {
+      "id": null,
+      "title": "NodeJS App Monitoring",
+      "uid": "backend-monitoring",
+      "refresh": "5s",
+      "panels": [
+        {
+          "type": "graph",
+          "title": "Request Duration (Avg)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_request_duration_seconds_sum[1m])) / sum(rate(http_request_duration_seconds_count[1m]))",
+              "legendFormat": "Avg Duration",
+              "refId": "B"
+            }
+          ],
+          "gridPos": {
+            "x": 8,
+            "y": 0,
+            "w": 8,
+            "h": 6
+          },
+          "unit": "s"
+        }
+      ],
+      "schemaVersion": 36,
+      "version": 1
+    }
+
