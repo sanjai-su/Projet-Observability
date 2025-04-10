@@ -1,8 +1,20 @@
-# Déploiement de Prometheus
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-server
+  namespace: kube-system
+spec:
+  ports:
+    - port: 9090
+      targetPort: 9090
+  selector:
+    app: prometheus
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus
+  name: prometheus-server
+  namespace: kube-system
 spec:
   replicas: 1
   selector:
@@ -15,90 +27,32 @@ spec:
     spec:
       containers:
         - name: prometheus
-          image: prom/prometheus:latest
-          args:
-            - "--config.file=/etc/prometheus/prometheus.yml"
+          image: prom/prometheus:v2.44.0
           ports:
             - containerPort: 9090
           volumeMounts:
-            - name: prometheus-config-volume
-              mountPath: /etc/prometheus
+            - name: prometheus-config
+              mountPath: /etc/prometheus/prometheus.yml
+              subPath: prometheus.yml
       volumes:
-        - name: prometheus-config-volume
+        - name: prometheus-config
           configMap:
             name: prometheus-config
-
 ---
-# ConfigMap de la configuration de Prometheus
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-config
+  namespace: kube-system
 data:
   prometheus.yml: |
     global:
-      scrape_interval: 5s
+      scrape_interval: 15s
     scrape_configs:
-      - job_name: 'nodejs'
+      - job_name: 'prometheus'
         static_configs:
-          - targets: ['serveur-service.default.svc.cluster.local:3001']
-      - job_name: 'redis'
-        static_configs:
-          - targets: ['redis-exporter.default.svc.cluster.local:9121']
-
-
----
-# Service Prometheus pour exposer l'interface web
-apiVersion: v1
-kind: Service
-metadata:
-  name: prometheus-service
-spec:
-  selector:
-    app: prometheus
-  ports:
-    - protocol: TCP
-      port: 9090
-      targetPort: 9090
-  type: NodePort
-
----
-# Déploiement Redis Exporter
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: redis-exporter
-  labels:
-    app: redis-exporter
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: redis-exporter
-  template:
-    metadata:
-      labels:
-        app: redis-exporter
-    spec:
-      containers:
-        - name: redis-exporter
-          image: oliver006/redis_exporter  # Redis Exporter officiel
-          ports:
-            - containerPort: 9121  # Port où Redis Exporter expose ses métriques
-          env:
-            - name: REDIS_ADDR
-              value: "redis-service:6379"  # On pointe vers le service Redis
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: redis-exporter  # Nom du service Redis Exporter
-spec:
-  selector:
-    app: redis-exporter
-  ports:
-    - protocol: TCP
-      port: 9121
-      targetPort: 9121
-  type: ClusterIP
+          - targets: ['localhost:9090']
+      - job_name: 'kubernetes-service-endpoints'
+        kubernetes_sd_configs:
+          - role: service
 
