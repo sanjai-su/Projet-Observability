@@ -163,62 +163,89 @@ data:
           ]
         },
         {
-          "title": "Redis - Latence",
+          "title": "Redis - CPU Usage",
           "type": "graph",
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
           "targets": [
             {
-              "expr": "redis_latency_microseconds",
-              "legendFormat": "{{instance}}",
+              "expr": "rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])",
+              "legendFormat": "Total CPU",
               "refId": "A"
+            },
+            {
+              "expr": "rate(redis_cpu_sys_seconds_total[1m])",
+              "legendFormat": "System CPU",
+              "refId": "B"
+            },
+            {
+              "expr": "rate(redis_cpu_user_seconds_total[1m])",
+              "legendFormat": "User CPU",
+              "refId": "C"
             }
           ],
           "yaxes": [
-            { "format": "µs", "title": "Latence" },
+            { "format": "short", "title": "CPU Seconds" },
             { "format": "short" }
           ]
         },
         {
-          "title": "Redis - Utilisation CPU/Mémoire",
+          "title": "Redis - Memory Usage",
           "type": "graph",
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
           "targets": [
             {
-              "expr": "redis_cpu_usage",
-              "legendFormat": "CPU {{instance}}",
+              "expr": "redis_memory_used_bytes / (1024 * 1024)",
+              "legendFormat": "Used Memory",
               "refId": "A"
             },
             {
-              "expr": "redis_memory_usage_bytes / (1024 * 1024)",
-              "legendFormat": "Memory {{instance}}",
+              "expr": "redis_memory_used_rss_bytes / (1024 * 1024)",
+              "legendFormat": "RSS Memory",
               "refId": "B"
             }
           ],
           "yaxes": [
-            { "format": "percent", "title": "CPU %" },
-            { "format": "bytes", "title": "Mémoire (MB)" }
+            { "format": "bytes", "title": "MB" },
+            { "format": "short" }
           ]
         },
         {
-          "title": "Redis - Connexions actives",
+          "title": "Redis - Latency by Command",
           "type": "graph",
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
           "targets": [
             {
-              "expr": "redis_connected_clients",
-              "legendFormat": "{{instance}}",
+              "expr": "redis_latency_percentiles_usec{quantile=\"0.99\"}",
+              "legendFormat": "{{cmd}} (p99)",
               "refId": "A"
+            },
+            {
+              "expr": "redis_latency_percentiles_usec{quantile=\"0.50\"}",
+              "legendFormat": "{{cmd}} (p50)",
+              "refId": "B"
             }
           ],
           "yaxes": [
-            { "format": "short", "title": "Connexions" },
+            { "format": "µs", "title": "Latency (µs)" },
             { "format": "short" }
+          ]
+        },
+        {
+          "title": "Redis - Connected Clients",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 32 },
+          "targets": [
+            {
+              "expr": "redis_connected_clients",
+              "legendFormat": "Clients",
+              "refId": "A"
+            }
           ]
         },
         {
           "title": "Kubernetes - Pods actifs",
           "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "gridPos": { "h": 8, "w": 12, "x": 8, "y": 32 },
           "targets": [
             {
               "expr": "sum(kube_pod_status_phase{phase=\"Running\"}) by (namespace)",
@@ -234,7 +261,7 @@ data:
         {
           "title": "Kubernetes - Événements de scaling",
           "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
           "targets": [
             {
               "expr": "changes(kube_deployment_spec_replicas[1h])",
@@ -255,6 +282,12 @@ data:
             "label": "Namespace",
             "type": "query",
             "query": "label_values(kube_pod_info, namespace)"
+          },
+          {
+            "name": "redis_cmd",
+            "label": "Redis Command",
+            "type": "query",
+            "query": "label_values(redis_latency_percentiles_usec, cmd)"
           }
         ]
       },
