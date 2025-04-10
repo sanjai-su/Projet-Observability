@@ -1,0 +1,42 @@
+# Déploiement Redis Exporter
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-exporter
+  labels:
+    app: redis-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-exporter
+  template:
+    metadata:
+      labels:
+        app: redis-exporter
+    spec:
+      containers:
+        - name: redis-exporter
+          image: oliver006/redis_exporter  # Redis Exporter officiel
+          ports:
+            - containerPort: 9121  # Port où Redis Exporter expose ses métriques
+          env:
+            - name: REDIS_ADDR
+              value: "redis-service:6379"  # On pointe vers le service Redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-exporter
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9121"
+spec:
+  selector:
+    app: redis-exporter
+  ports:
+    - protocol: TCP
+      port: 9121
+      targetPort: 9121
+  type: ClusterIP
+
