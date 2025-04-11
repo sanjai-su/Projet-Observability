@@ -1,4 +1,11 @@
-const URL = process.env.URL || 'http://localhost:8080'
+const { execSync } = require('child_process')
+
+const IP = execSync("kubectl get svc serveur-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}'")
+  .toString()
+  .trim()
+
+const URL = `http://${IP}:3001`
+
 
 const words = [
   'drive',
