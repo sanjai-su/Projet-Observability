@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: serveur-deployment
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: serveur
@@ -20,10 +20,10 @@ spec:
           resources:
             requests:
               cpu: "100m"
-              memory: "128Mi"
+              memory: "64Mi"
             limits:
-              cpu: "500m"
-              memory: "256Mi"
+              cpu: "200m"
+              memory: "128Mi"
 
 ---
 

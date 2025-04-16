@@ -20,6 +20,28 @@ data:
       - job_name: 'redis-exporter'
         static_configs:
           - targets: ['redis-exporter:9121']
+
+      - job_name: 'redis-exporter-replicas'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          # Garder seulement les pods avec prometheus.io/scrape=true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+
+          # Garder uniquement les pods avec le label app=redis-replica
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: redis-replica
+
+          # Construire l'adresse IP:port correctement
+          - source_labels: [__meta_kubernetes_pod_ip, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: (.+);(.+)
+            replacement: ${1}:${2}
+            target_label: __address__
+
 ---
 apiVersion: v1
 kind: Service
@@ -32,6 +54,7 @@ spec:
       targetPort: 9090
   selector:
     app: prometheus
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -61,4 +84,3 @@ spec:
         - name: prometheus-config
           configMap:
             name: prometheus-config
-

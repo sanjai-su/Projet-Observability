@@ -100,40 +100,65 @@ data:
       "panels": [
         {
           "title": "Node.js - Temps de réponse",
-          "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "type": "timeseries",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+          },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, endpoint))",
-              "legendFormat": "{{endpoint}}",
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, endpoint)",
+              "legendFormat": "{{route}} (p95)",
               "refId": "A"
             }
           ],
           "yaxes": [
-            { "format": "s", "title": "Temps de réponse" },
+            { "format": "s", "title": "Temps de réponse", "min": 0 },
             { "format": "short" }
           ]
         },
         {
           "title": "Node.js - Taux d'erreur",
-          "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "type": "timeseries",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 10 },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            }
+          },
           "targets": [
             {
-              "expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m]) by (endpoint) / sum(rate(http_requests_total[1m])) by (endpoint)",
+              "expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m])) by (endpoint) / sum(rate(http_requests_total[1m])) by (endpoint)",
               "legendFormat": "{{endpoint}}",
               "refId": "A"
             }
           ],
           "yaxes": [
-            { "format": "percentunit", "title": "Taux d'erreur" },
+            { "format": "percentunit", "title": "Taux d'erreur", "min": 0, "max": 1 },
             { "format": "short" }
           ]
         },
         {
           "title": "Node.js - Utilisation CPU",
-          "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "type": "timeseries",
+          "gridPos": { "h": 10, "w": 12, "x": 0, "y": 20 },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "value": null, "color": "green" },
+                  { "value": 80, "color": "red" }
+                ]
+              }
+            }
+          },
           "targets": [
             {
               "expr": "rate(process_cpu_seconds_total[1m]) * 100",
@@ -142,14 +167,14 @@ data:
             }
           ],
           "yaxes": [
-            { "format": "percent", "title": "CPU %" },
+            { "format": "percent", "title": "CPU %", "min": 0, "max": 100 },
             { "format": "short" }
           ]
         },
         {
           "title": "Node.js - Utilisation Mémoire",
-          "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "type": "timeseries",
+          "gridPos": { "h": 10, "w": 12, "x": 12, "y": 20 },
           "targets": [
             {
               "expr": "process_resident_memory_bytes / (1024 * 1024)",
@@ -158,14 +183,14 @@ data:
             }
           ],
           "yaxes": [
-            { "format": "bytes", "title": "Mémoire (MB)" },
+            { "format": "bytes", "title": "Mémoire (MB)", "min": 0 },
             { "format": "short" }
           ]
         },
         {
           "title": "Redis - CPU Usage",
-          "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "type": "timeseries",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 30 },
           "targets": [
             {
               "expr": "rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])",
@@ -184,14 +209,14 @@ data:
             }
           ],
           "yaxes": [
-            { "format": "short", "title": "CPU Seconds" },
+            { "format": "short", "title": "CPU Seconds", "min": 0 },
             { "format": "short" }
           ]
         },
         {
           "title": "Redis - Memory Usage",
-          "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "type": "timeseries",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 40 },
           "targets": [
             {
               "expr": "redis_memory_used_bytes / (1024 * 1024)",
@@ -205,14 +230,14 @@ data:
             }
           ],
           "yaxes": [
-            { "format": "bytes", "title": "MB" },
+            { "format": "bytes", "title": "MB", "min": 0 },
             { "format": "short" }
           ]
         },
         {
           "title": "Redis - Latency by Command",
-          "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "type": "timeseries",
+          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 50 },
           "targets": [
             {
               "expr": "redis_latency_percentiles_usec{quantile=\"0.99\"}",
@@ -226,77 +251,61 @@ data:
             }
           ],
           "yaxes": [
-            { "format": "µs", "title": "Latency (µs)" },
+            { "format": "µs", "title": "Latency (µs)", "min": 0 },
             { "format": "short" }
           ]
         },
         {
           "title": "Redis - Connected Clients",
           "type": "stat",
-          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 32 },
+          "gridPos": { "h": 6, "w": 8, "x": 0, "y": 62 },
           "targets": [
             {
               "expr": "redis_connected_clients",
               "legendFormat": "Clients",
               "refId": "A"
             }
-          ]
-        },
-        {
-          "title": "Kubernetes - Pods actifs",
-          "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 8, "y": 32 },
-          "targets": [
-            {
-              "expr": "sum(kube_pod_status_phase{phase=\"Running\"}) by (namespace)",
-              "legendFormat": "{{namespace}}",
-              "refId": "A"
-            }
           ],
-          "yaxes": [
-            { "format": "short", "title": "Pods" },
-            { "format": "short" }
-          ]
-        },
-        {
-          "title": "Kubernetes - Événements de scaling",
-          "type": "graph",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
-          "targets": [
-            {
-              "expr": "changes(kube_deployment_spec_replicas[1h])",
-              "legendFormat": "{{deployment}}",
-              "refId": "A"
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "value": null, "color": "green" },
+                  { "value": 50, "color": "orange" },
+                  { "value": 100, "color": "red" }
+                ]
+              }
             }
-          ],
-          "yaxes": [
-            { "format": "short", "title": "Changements" },
-            { "format": "short" }
-          ]
+          }
         }
       ],
       "templating": {
         "list": [
           {
             "name": "namespace",
-            "label": "Namespace",
             "type": "query",
             "query": "label_values(kube_pod_info, namespace)"
           },
           {
             "name": "redis_cmd",
-            "label": "Redis Command",
             "type": "query",
             "query": "label_values(redis_latency_percentiles_usec, cmd)"
-          }
-        ]
-      },
-      "annotations": {
-        "list": [
-          {
-            "name": "Deployments",
-            "type": "dashboard",
-            "query": "changes(kube_deployment_spec_replicas[1h]) > 0"
           }
         ]
       }

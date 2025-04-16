@@ -6,7 +6,6 @@ const IP = execSync("kubectl get svc serveur-service -o jsonpath='{.status.loadB
 
 const URL = `http://${IP}:3001`
 
-
 const words = [
   'drive',
   'driver',
@@ -93,6 +92,24 @@ const writeAndRead = async (max = 10000, iter = 10) => {
   }
 }
 
+const writeOnly = async (max = 10000, iter = 100) => {
+  let call = 0
+  while (call < max) {
+    console.log('fetch')
+    const results = await Promise.all(
+      new Array(iter).fill(1).map((_) => {
+        const id = words[random(words.length)]
+        const val = sentences[random(sentences.length)]
+        return setItem({ id, val })
+      })
+    )
+    call += iter
+    console.log('wait')
+    console.log(call)
+    await sleep(200)
+  }
+}
+
 const openPendingConnections = async (max = 200, time = 10000) =>
   Promise.all(new Array(max).fill(1).map((_) => unsafe(time)))
 
@@ -107,6 +124,9 @@ const main = async () => {
       break
     case 'pending':
       await openPendingConnections(arg1, arg2)
+      break
+    case 'writeOnly':
+      await writeOnly(arg1, arg2)
       break
     default:
       console.log('connecting to ' + URL)
